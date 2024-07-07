@@ -1,7 +1,22 @@
 library = []
 borrowed_books = []
+user_role = None  # zmienna globalna przechowująca rolę użytkownika
+
+def add_user():
+    global user_role
+    Add_user = input("Enter username: ")
+    Password = input("Enter password: ")
+    if Password == 'asd!':
+        user_role = 'admin'
+        print(f"Welcome {Add_user} to admin mode!")
+    else:
+        user_role = 'user'
+        print("Welcome to user mode")
 
 def add_books():
+    if user_role != 'admin':
+        print("Access denied. Only admins can add books.")
+        return
     global library
     print("Add new book")
     quantity = int(input("Number of books to add: "))
@@ -18,7 +33,7 @@ def add_books():
                 break
 
         if not found:
-            library.append({'book_name': book_name, 'author': author, 'count': 1, 'rent_count': 0})
+            library.append({'book_name': book_name, 'author': author, 'count': 1, 'rent_count': 0, 'ratings': []})
             print(f"Book '{book_name}' by {author} added to the library.")
         else:
             print(f"Book '{book_name}' already exists in the library.")
@@ -29,6 +44,9 @@ def display_library():
         print(f"{index}. '{book['book_name']}' by {book['author']} - Available: {book['count']}")
 
 def rent_book():
+    if user_role != 'admin':
+        print("Access denied. Only admins can rent books.")
+        return
     global borrowed_books
     want_book = input("Write the book you want to rent: ").strip().lower()
     found = False
@@ -49,6 +67,9 @@ def rent_book():
         print(f"Book '{want_book}' is not available in the library.")
 
 def return_book():
+    if user_role != 'admin':
+        print("Access denied. Only admins can return books.")
+        return
     global borrowed_books
     return_book = input("Enter the title of the book you want to return: ").strip().lower()
     if return_book in borrowed_books:
@@ -86,36 +107,76 @@ def best_book():
     for index, book in enumerate(sorted_books[:5], start=1):
         print(f"{index}. '{book['book_name']}' by {book['author']} - Rented {book['rent_count']} times")
 
+def rate_book():
+    search_rating_book = input("Write what book you want to rate: ").strip().lower()
+    found = False
+    for book in library:
+        if book["book_name"].lower() == search_rating_book:
+            rating = input(f"Rate '{search_rating_book}': ")
+            book['ratings'].append(rating)
+            found = True
+            print(f"Book '{search_rating_book}' has been rated.")
+            break
+    if not found:
+        print(f"Book '{search_rating_book}' is not available")
+
+def show_ratings_books():
+    find_your_book = input("Enter the book whose ratings you want to see: ").strip().lower()
+    found = False
+    for book in library:
+        if book["book_name"].lower() == find_your_book:
+            if book['ratings']:
+                print(f"Ratings for '{find_your_book}': {', '.join(book['ratings'])}")
+            else:
+                print(f"No ratings for '{find_your_book}'")
+            found = True
+            break
+    if not found:
+        print(f"Book '{find_your_book}' is not available")
 def main():
     print("Library System")
+    add_user()
     while True:
         print("\nChoose your option")
-        print("1. Add Books")
-        print("2. Display Library")
-        print("3. Rent a Book")
-        print("4. Return a Book")
-        print("5. Find Book")
-        print("6. Recommend Books")
-        print("7. Exit")
+        if user_role == 'admin':
+            print("1. Add Books")
+            print("2. Display Library")
+            print("3. Rent a Book")
+            print("4. Return a Book")
+            print("5. Find Book")
+            print("6. Recommend Books")
+            print("7. Rate the Books")
+            print("8. Read other users' ratings")
+            print("9. Exit")
+        else:
+            print("2. Display Library")
+            print("5. Find Book")
+            print("7. Rate the Books")
+            print("8. Read other users' ratings")
+            print("9. Exit")
 
         choice = input("Enter your choice: ").strip()
-        if choice == '1':
+        if choice == '1' and user_role == 'admin':
             add_books()
         elif choice == '2':
             display_library()
-        elif choice == '3':
+        elif choice == '3' and user_role == 'admin':
             rent_book()
-        elif choice == '4':
+        elif choice == '4' and user_role == 'admin':
             return_book()
         elif choice == '5':
             find_book()
-        elif choice == '6':
+        elif choice == '6' and user_role == 'admin':
             best_book()
         elif choice == '7':
+            rate_book()
+        elif choice == '8':
+            show_ratings_books()
+        elif choice == '9':
             print("Exiting the library system.")
             break
         else:
-            print("Invalid choice. Please choose a valid option.")
+            print("Invalid choice or access denied. Please choose a valid option.")
 
 if __name__ == "__main__":
     main()
